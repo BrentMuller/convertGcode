@@ -2,7 +2,7 @@ module Main where
 
 import Data.Attoparsec.ByteString
 import qualified Data.ByteString as B
-
+import Data.Attoparsec.ByteString.Char8
 -------------------------------------------------------------------------------
 main :: IO ()
 main = do
@@ -14,13 +14,16 @@ main = do
 
 
 -------------------------------------------------------------------------------
-theParser::Parser ()
+theParser::Parser B.ByteString
 theParser = do
-    return ()
+    str <- many1 line
+    endOfInput
+    return B.empty
 
 -------------------------------------------------------------------------------
-line::Parser ()
+line::Parser B.ByteString
 line = do
-    
-    return ()
+    chars <- many1 anyWord8 
+    endOfLine
+    return $ B.pack chars
 -------------------------------------------------------------------------------
