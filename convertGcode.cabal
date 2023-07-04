@@ -35,7 +35,8 @@ executable convertGcode
     -- other-extensions:
     build-depends:    base ^>=4.16.4.0,
                       attoparsec,
-                      bytestring
+                      text,
+                      filepath
 
 
     hs-source-dirs:   app
