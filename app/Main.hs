@@ -18,7 +18,6 @@ main = do
                print "no arguments given- exiting.."
                exitWith $ ExitFailure 1
     doit fileName theParser 
-
 -------------------------------------------------------------------------------
 doit::FilePath -> Parser [TL.Text] ->  IO () 
 doit filePath prsr = do
@@ -27,7 +26,8 @@ doit filePath prsr = do
     case result of
         Fail unconsumed contexts message -> do
             print "Failure:"
-            print $ "unconsumed: " ++ show unconsumed 
+            print $ "first 50 characters unconsumed: " ++ 
+                (show $ TL.take 50 unconsumed )
             print $ "contexts: " ++ show contexts
             print $ "message: " ++ show message
             return ()
@@ -38,8 +38,10 @@ doit filePath prsr = do
 -------------------------------------------------------------------------------
 theParser::Parser [TL.Text]
 theParser = do
-    string $ T.singleton '%'
-    endOfLine
+    --some Haas controls send back an empty line before the "%"
+    --and all lines end with blanks
+    choice [ endOfLine >> (string $ T.pack "%" ) >> 
+        endOfLine,  (string $ T.singleton '%') >> endOfLine]
     str <- many1 line
     string $ T.singleton '%'
     endOfLine
@@ -52,7 +54,7 @@ line = do
 -------------------------------------------------------------------------------
 gWord::Parser TL.Text
 gWord = do
-   a <-letter
+   a <-choice [letter,char '/']
    b <-choice [parseNoLeadingZero,parseNoLeadingZeroMinus,wordRemainder]
    AttoT.takeWhile (\x->x==' ')
    return $ TL.singleton a  `TL.append`  (TL.pack.T.unpack) b `TL.append` TL.pack " "
@@ -61,6 +63,7 @@ comment::Parser [TL.Text]
 comment = do
     a<-string $ T.singleton '(' 
     b<-manyTill anyChar  $ string $ T.singleton ')' 
+    AttoT.takeWhile (\x->x==' ')
     endOfLine
     return $ [TL.pack "(" ] ++ [TL.pack b] ++ [TL.pack ") " ] 
 -------------------------------------------------------------------------------
